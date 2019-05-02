@@ -17,11 +17,7 @@
 namespace mc {
 
 class str {
-#ifdef TEST_MC_STR
-public:
-#else
 private:
-#endif
 	char *start_ptr = nullptr;
 	char *end_ptr = nullptr;
 	char *cap_ptr = nullptr;
@@ -107,11 +103,11 @@ public:
 	// Constrained array subscript operators
 	char& operator[](size_t index)
 	{
-		return start_ptr[MIN(index, (size_t)(end_ptr - start_ptr))];
+		return start_ptr[MIN(index, len())];
 	}
 	const char& operator[](size_t index) const
 	{
-		return start_ptr[MIN(index, (size_t)(end_ptr - start_ptr))];
+		return start_ptr[MIN(index, len())];
 	}
 
 	// Relational operators

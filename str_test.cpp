@@ -7,11 +7,9 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <iostream>
 #include <sstream>
 
-#ifndef TEST_MC_STR
-#define TEST_MC_STR
-#endif
 #include "str.h"
 
 int main()
@@ -20,9 +18,10 @@ int main()
 	{
 		mc::str s;
 
-		assert(s.start_ptr == nullptr);
-		assert(s.end_ptr == nullptr);
-		assert(s.cap_ptr == nullptr);
+		assert(s.begin() == nullptr);
+		assert(s.end() == nullptr);
+		assert(s.len() == 0);
+		assert(s.cap() == 0);
 	}
 
 	// Constructor with const char * as an argument
@@ -31,7 +30,7 @@ int main()
 
 		mc::str s(c_str);
 
-		assert(std::memcmp(s.start_ptr, c_str, strlen(c_str)+1) == 0);
+		assert(std::memcmp(s.begin(), c_str, std::strlen(c_str)+1) == 0);
 	}
 
 	// Copy constructor
@@ -40,113 +39,88 @@ int main()
 
 		mc::str s(s1);
 
-		assert(std::memcmp(s.start_ptr, s.start_ptr,
-				   (s1.end_ptr - s1.start_ptr + 1)) == 0);
+		assert(std::memcmp(s.begin(), s1.begin(), s1.len()+1) == 0);
 	}
 
 	// Move constructor
 	{
 		mc::str s1("1234");
-		mc::str s2;
-		s2.start_ptr = s1.start_ptr;
-		s2.end_ptr = s1.end_ptr;
-		s2.cap_ptr = s1.cap_ptr;
+		mc::str s2(s1);
 
 		mc::str s(std::move(s1));
 
-		assert(s1.start_ptr == nullptr);
-		assert(s1.end_ptr == nullptr);
-		assert(s1.cap_ptr == nullptr);
-		assert(std::memcmp(s.start_ptr, s2.start_ptr,
-				   (s2.end_ptr - s2.start_ptr + 1)) == 0);
-		s2.start_ptr = nullptr;
-		s2.end_ptr = nullptr;
-		s2.cap_ptr = nullptr;
+		assert(s1.begin() == nullptr);
+		assert(s1.end() == nullptr);
+		assert(std::memcmp(s.begin(), s2.begin(), s2.len()+1) == 0);
 	}
 
-	// Destructor
-	{
-		mc::str s("1234");
-
-		s.~str();
-	}
-
-	// Copy assignment
+	// Copy assignment,
+	// cap()
 	{
 		mc::str s;
 		// self assignment
 		s = s;
-		assert((s.cap_ptr - s.start_ptr) == 0);
+		assert(s.cap() == 0);
 		// expand cap to fit the new str
 		mc::str s1("1234");
 
 		s = s1;
 
-		assert((s.cap_ptr - s.start_ptr) ==
-		       (s1.cap_ptr - s1.start_ptr));
-		assert(std::memcmp(s.start_ptr, s1.start_ptr,
-				   (s1.end_ptr - s1.start_ptr + 1)) == 0);
+		assert(s.cap() == s1.cap());
+		assert(std::memcmp(s.begin(), s1.begin(), s1.len()+1) == 0);
 		// expand cap by doubling it
 		mc::str s2("123456");
 		size_t old_cap2 = s.cap();
 
 		s = s2;
 
-		assert((size_t)(s.cap_ptr - s.start_ptr) == 2*old_cap2);
-		assert(std::memcmp(s.start_ptr, s2.start_ptr,
-				   (s2.end_ptr - s2.start_ptr + 1)) == 0);
+		assert(s.cap() == 2*old_cap2);
+		assert(std::memcmp(s.begin(), s2.begin(), s2.len()+1) == 0);
 		// don't change cap
 		mc::str s3("12");
 		size_t old_cap3 = s.cap();
 
 		s = s3;
 
-		assert((size_t)(s.cap_ptr - s.start_ptr) == old_cap3);
-		assert(std::memcmp(s.start_ptr, s3.start_ptr,
-				   (s3.end_ptr - s3.start_ptr + 1)) == 0);
+		assert(s.cap() == old_cap3);
+		assert(std::memcmp(s.begin(), s3.begin(), s3.len()+1) == 0);
 	}
 
 	// Move assignment
 	{
 		mc::str s;
-		mc::str s1("1234");
-		mc::str s2;
-		s2.start_ptr = s1.start_ptr;
-		s2.end_ptr = s1.end_ptr;
-		s2.cap_ptr = s1.cap_ptr;
-
 		// self assignment
 		s = std::move(s);
+
+		mc::str s1("1234");
+		mc::str s2(s1);
+
 		s = std::move(s1);
 
-		assert(s1.start_ptr == nullptr);
-		assert(s1.end_ptr == nullptr);
-		assert(s1.cap_ptr == nullptr);
-		assert(std::memcmp(s.start_ptr, s2.start_ptr,
-				   (s2.end_ptr - s2.start_ptr + 1)) == 0);
-		s2.start_ptr = nullptr;
-		s2.end_ptr = nullptr;
-		s2.cap_ptr = nullptr;
+		assert(s1.begin() == nullptr);
+		assert(s1.end() == nullptr);
+		assert(std::memcmp(s.begin(), s2.begin(), s2.len()+1) == 0);
 	}
 
 	// len()/size()
 	{
-		mc::str s("1234");
-		assert(s.len() == (size_t)(s.end_ptr - s.start_ptr));
+		const char *c_str = "1234";
+		mc::str s(c_str);
+
+		assert(s.len() == std::strlen(c_str));
 		assert(s.size() == s.len());
 	}
 
-	// cap()
+	// begin(), end()
 	{
 		mc::str s("1234");
-		assert(s.cap() == (size_t)(s.cap_ptr - s.start_ptr));
-	}
+		const char *c = s.begin();
 
-	// begin() and end()
-	{
-		mc::str s("1234");
-		assert(s.begin() == s.start_ptr);
-		assert(s.end() == s.end_ptr);
+		for (size_t i = 0; i < s.len()+1; i++) {
+			assert(*c++ == s[i]);
+		}
+		assert(--c == s.end());
+		assert((size_t)(s.end() - s.begin()) == s.len());
 	}
 
 	// Array subscript operators
@@ -154,25 +128,23 @@ int main()
 		// non-const
 		{
 			const char *c_str = "1234";
-			size_t c_str_len = std::strlen(c_str);
 			mc::str s(c_str);
 			size_t i;
 			for (i = 0; i < std::strlen(c_str)+1; i++) {
 				assert(s[i] == c_str[i]);
 			}
-			assert(s[i] == c_str[MIN(i, c_str_len)]);
+			assert(s[i] == c_str[MIN(i, std::strlen(c_str))]);
 			assert(&s[i] == s.end());
 		}
 		// const
 		{
 			const char *c_str = "1234";
-			size_t c_str_len = std::strlen(c_str);
 			const mc::str s(c_str);
 			size_t i;
 			for (i = 0; i < std::strlen(c_str)+1; i++) {
 				assert(s[i] == c_str[i]);
 			}
-			assert(s[i] == c_str[MIN(i, c_str_len)]);
+			assert(s[i] == c_str[MIN(i, std::strlen(c_str))]);
 			assert(&s[i] == s.end());
 		}
 	}
@@ -240,4 +212,6 @@ int main()
 
 		// TODO: extraction
 	}
+
+	std::cout << "[\e[32m PASS \e[39m]" << '\n';
 }
