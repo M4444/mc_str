@@ -63,18 +63,21 @@ int main()
 		assert(s.cap() == 0);
 		// expand cap to fit the new str
 		mc::str s1("1234");
+		size_t old_cap1 = s.cap();
 
 		s = s1;
 
-		assert(s.cap() == s1.cap());
+		assert(s.cap() > old_cap1);
+		assert(s.cap() >= s1.cap());
 		assert(std::memcmp(s.begin(), s1.begin(), s1.len()+1) == 0);
-		// expand cap by doubling it
+		// expand cap
 		mc::str s2("123456");
 		size_t old_cap2 = s.cap();
 
 		s = s2;
 
-		assert(s.cap() == 2*old_cap2);
+		assert(s.cap() > old_cap2);
+		assert(s.cap() >= s2.cap());
 		assert(std::memcmp(s.begin(), s2.begin(), s2.len()+1) == 0);
 		// don't change cap
 		mc::str s3("12");
@@ -83,6 +86,7 @@ int main()
 		s = s3;
 
 		assert(s.cap() == old_cap3);
+		assert(s.cap() >= s3.cap());
 		assert(std::memcmp(s.begin(), s3.begin(), s3.len()+1) == 0);
 	}
 
@@ -100,6 +104,16 @@ int main()
 		assert(s1.begin() == nullptr);
 		assert(s1.end() == nullptr);
 		assert(std::memcmp(s.begin(), s2.begin(), s2.len()+1) == 0);
+	}
+
+	// reserve()
+	{
+		mc::str s;
+		assert(s.cap() == 0);
+
+		size_t new_cap = 4;
+		s.reserve(new_cap);
+		assert(s.cap() >= new_cap);
 	}
 
 	// len()/size()

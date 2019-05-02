@@ -21,22 +21,54 @@ private:
 	char *start_ptr = nullptr;
 	char *end_ptr = nullptr;
 	char *cap_ptr = nullptr;
+
+	void free_and_reserve(size_t cap_request, bool free = true)
+	{
+		const size_t old_cap = cap();
+		if (cap_request > old_cap) {
+			const size_t old_len = len();
+			const size_t new_cap = MAX(cap_request, 2*old_cap);
+			if (free) {
+				std::free(start_ptr);
+				start_ptr = nullptr;
+			}
+			start_ptr = (char*) std::realloc(start_ptr, new_cap+1);
+			if (start_ptr) {
+				end_ptr = start_ptr + old_len;
+				cap_ptr = start_ptr + new_cap;
+			} else {
+				end_ptr = nullptr;
+				cap_ptr = nullptr;
+			}
+		}
+	}
 public:
 	str() = default;
 	str(const char *c_str)
 	{
 		if (c_str) {
-			const size_t len = std::strlen(c_str);
-			start_ptr = (char*) std::malloc(len + 1);
+			const size_t c_str_len = std::strlen(c_str);
+			free_and_reserve(c_str_len);
+
 			if (start_ptr) {
-				strcpy(start_ptr, c_str);
-				cap_ptr = start_ptr + len;
-				end_ptr = cap_ptr;
+				std::strcpy(start_ptr, c_str);
+				end_ptr = start_ptr + c_str_len;
 			}
 		}
 	}
 	// Copy constructor
-	str(const str& str_2) : str(str_2.start_ptr) {}
+	str(const str& str_2)
+	{
+		if (str_2.start_ptr) {
+			const size_t len_2 = str_2.len();
+			free_and_reserve(len_2);
+
+			if (start_ptr) {
+				std::strcpy(start_ptr, str_2.start_ptr);
+				end_ptr = start_ptr + len_2;
+			}
+		}
+	}
 	// Move constructor
 	str(str&& str_2)
 	{
@@ -60,15 +92,8 @@ public:
 	str& operator=(const str& str_2)
 	{
 		if (this != &str_2) {
-			const size_t cap = this->cap();
 			const size_t len_2 = str_2.len();
-			if (len_2 > cap) {
-				std::free(start_ptr);
-				end_ptr = nullptr;
-				const size_t new_len = MAX(len_2, 2*cap);
-				start_ptr = (char*) std::malloc(new_len + 1);
-				cap_ptr = start_ptr + new_len;
-			}
+			free_and_reserve(len_2);
 
 			if (start_ptr) {
 				std::strcpy(start_ptr, str_2.start_ptr);
@@ -90,6 +115,10 @@ public:
 			str_2.cap_ptr = nullptr;
 		}
 		return *this;
+	}
+
+	void reserve(size_t new_cap) {
+		free_and_reserve(new_cap, false);
 	}
 
 	size_t len() const { return end_ptr - start_ptr; }
