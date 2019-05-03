@@ -24,13 +24,22 @@ int main()
 		assert(s.cap() == 0);
 	}
 
-	// Constructor with const char * as an argument
+	// Constructor with char * as an argument
 	{
 		const char *c_str = "1234";
 
 		mc::str s(c_str);
 
 		assert(std::memcmp(s.begin(), c_str, std::strlen(c_str)+1) == 0);
+	}
+
+	// Constructor with char as an argument
+	{
+		const char c = '1';
+
+		mc::str s(c);
+
+		assert(std::memcmp(s.begin(), &c, 1) == 0);
 	}
 
 	// Copy constructor

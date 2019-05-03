@@ -52,11 +52,10 @@ private:
 					 (index == 0 && c_str_len >= len()));
 
 			char *index_ptr = start_ptr + MIN(index, len());
+			std::memcpy(index_ptr, c_str, c_str_len);
 			if (free || index + c_str_len > len()) {
-				std::strcpy(index_ptr, c_str);
 				end_ptr = index_ptr + c_str_len;
-			} else {
-				std::memcpy(index_ptr, c_str, c_str_len);
+				*end_ptr = '\0';
 			}
 		}
 	}
@@ -65,6 +64,10 @@ public:
 	str(const char *c_str)
 	{
 		free_and_write(c_str, std::strlen(c_str));
+	}
+	str(const char c)
+	{
+		free_and_write(&c, 1);
 	}
 	// Copy constructor
 	str(const str& str_2)
