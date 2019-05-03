@@ -227,6 +227,44 @@ int main()
 		assert(s == "12567890");
 	}
 
+	// append()/operator+=()
+	{
+		// append()
+		{
+			mc::str s;
+			mc::str s1("56");
+			mc::str s2("78");
+
+			s.append("1234");
+			assert(s == "1234");
+
+			s.append(s1).append(s2);
+			assert(s == "12345678");
+		}
+		// operator+=()
+		{
+			mc::str s;
+			mc::str s1("56");
+			mc::str s2("78");
+
+			s += "1234";
+			assert(s == "1234");
+
+			s += s1 += s2;
+			assert(s == "12345678");
+		}
+	}
+
+	// operator+()
+	{
+		mc::str s;
+		mc::str s1("12");
+		mc::str s2("34");
+
+		s = s1 + s2;
+		assert(s == "1234");
+	}
+
 	// Stream extraction and insertion
 	{
 		mc::str s = "1234";

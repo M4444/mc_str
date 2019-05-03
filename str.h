@@ -186,6 +186,22 @@ public:
 	{
 		free_and_write(str_2.start_ptr, str_2.len(), index, false);
 	}
+
+	str& append(const str& str_2)
+	{
+		overwrite_at(str_2, len());
+		return *this;
+	}
+
+	str& operator+=(const str& str_2)
+	{
+		return append(str_2);
+	}
+
+	str operator+(const str& str_2)
+	{
+		return append(str_2);
+	}
 };
 
 std::ostream& operator<<(std::ostream& os, const str& str)
