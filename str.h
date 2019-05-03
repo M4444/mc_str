@@ -42,32 +42,34 @@ private:
 			}
 		}
 	}
+
+	void free_and_write(const char *c_str, const size_t c_str_len,
+			    const size_t index = 0, bool free = true)
+	{
+		if (c_str) {
+			free_and_reserve(index + c_str_len,
+					 free ||
+					 (index == 0 && c_str_len >= len()));
+
+			char *index_ptr = start_ptr + MIN(index, len());
+			if (free || index + c_str_len > len()) {
+				std::strcpy(index_ptr, c_str);
+				end_ptr = index_ptr + c_str_len;
+			} else {
+				std::memcpy(index_ptr, c_str, c_str_len);
+			}
+		}
+	}
 public:
 	str() = default;
 	str(const char *c_str)
 	{
-		if (c_str) {
-			const size_t c_str_len = std::strlen(c_str);
-			free_and_reserve(c_str_len);
-
-			if (start_ptr) {
-				std::strcpy(start_ptr, c_str);
-				end_ptr = start_ptr + c_str_len;
-			}
-		}
+		free_and_write(c_str, std::strlen(c_str));
 	}
 	// Copy constructor
 	str(const str& str_2)
 	{
-		if (str_2.start_ptr) {
-			const size_t len_2 = str_2.len();
-			free_and_reserve(len_2);
-
-			if (start_ptr) {
-				std::strcpy(start_ptr, str_2.start_ptr);
-				end_ptr = start_ptr + len_2;
-			}
-		}
+		free_and_write(str_2.start_ptr, str_2.len());
 	}
 	// Move constructor
 	str(str&& str_2)
@@ -92,13 +94,7 @@ public:
 	str& operator=(const str& str_2)
 	{
 		if (this != &str_2) {
-			const size_t len_2 = str_2.len();
-			free_and_reserve(len_2);
-
-			if (start_ptr) {
-				std::strcpy(start_ptr, str_2.start_ptr);
-				end_ptr = start_ptr + len_2;
-			}
+			free_and_write(str_2.start_ptr, str_2.len());
 		}
 		return *this;
 	}
@@ -184,6 +180,11 @@ public:
 	friend bool operator!=(const str& left_str, const str& right_str)
 	{
 		return !(left_str == right_str);
+	}
+
+	void overwrite_at(const str& str_2, const size_t index)
+	{
+		free_and_write(str_2.start_ptr, str_2.len(), index, false);
 	}
 };
 

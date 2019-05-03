@@ -162,6 +162,7 @@ int main()
 			assert(&s[i] == s.end());
 		}
 	}
+
 	// Relational operators
 	{
 		const std::array<mc::str, 8> str_list {
@@ -208,6 +209,24 @@ int main()
 			}
 		}
 	}
+
+	// overwrite_at()
+	{
+		mc::str s;
+
+		s.overwrite_at("1234", 0);
+		assert(s == "1234");
+
+		s.overwrite_at("56", 2);
+		assert(s == "1256");
+
+		s.overwrite_at("78", 4);
+		assert(s == "125678");
+
+		s.overwrite_at("90", 100);
+		assert(s == "12567890");
+	}
+
 	// Stream extraction and insertion
 	{
 		mc::str s = "1234";
